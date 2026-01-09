@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FinanceCalc</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+tailwind.config = { darkMode: 'class' }
+</script>
+<style>
+input[type=range]{accent-color:#00d09c}
+.tab{display:none}
+.tab.active{display:block}
+.nav-btn{flex:1;text-align:center;font-size:12px}
+</style>
+</head>
+
+<body class="bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-gray-100">
+
+<!-- MAIN -->
+<main class="pb-20 max-w-md mx-auto">
+
+<!-- TAB 1: SIMPLE CALCULATOR -->
+<section id="tab-simple" class="tab active p-4">
+<h2 class="text-xl font-bold mb-3">Simple Calculator</h2>
+
+<input id="calcDisplay" class="w-full p-3 text-right text-xl rounded bg-gray-200 dark:bg-gray-700" readonly>
+
+<div class="grid grid-cols-4 gap-2 mt-3">
+<button onclick="press('7')" class="btn">7</button>
+<button onclick="press('8')" class="btn">8</button>
+<button onclick="press('9')" class="btn">9</button>
+<button onclick="press('/')" class="btn">÷</button>
+
+<button onclick="press('4')" class="btn">4</button>
+<button onclick="press('5')" class="btn">5</button>
+<button onclick="press('6')" class="btn">6</button>
+<button onclick="press('*')" class="btn">×</button>
+
+<button onclick="press('1')" class="btn">1</button>
+<button onclick="press('2')" class="btn">2</button>
+<button onclick="press('3')" class="btn">3</button>
+<button onclick="press('-')" class="btn">−</button>
+
+<button onclick="press('0')" class="btn">0</button>
+<button onclick="press('.')" class="btn">.</button>
+<button onclick="calculate()" class="btn bg-green-500 text-white">=</button>
+<button onclick="press('+')" class="btn">+</button>
+
+<button onclick="clearCalc()" class="col-span-4 bg-red-500 text-white p-2 rounded">Clear</button>
+</div>
+</section>
+
+<!-- TAB 2: SIP -->
+<section id="tab-sip" class="tab p-4">
+<h2 class="text-xl font-bold mb-3">SIP Calculator</h2>
+
+<label>Monthly SIP (₹)</label>
+<input type="number" id="sipAmount" value="10000" class="w-full p-2 rounded">
+<input type="range" min="500" max="100000" step="500" value="10000"
+oninput="syncRange('sipAmount',this.value)">
+
+<label>Return %</label>
+<input type="number" id="sipRate" value="12" class="w-full p-2 rounded">
+<input type="range" min="1" max="30" step="0.5" value="12"
+oninput="syncRange('sipRate',this.value)">
+
+<label>Years</label>
+<input type="number" id="sipYears" value="10" class="w-full p-2 rounded">
+<input type="range" min="1" max="40" step="1" value="10"
+oninput="syncRange('sipYears',this.value)">
+
+<label>Step-Up %</label>
+<input type="number" id="sipStep" value="10" class="w-full p-2 rounded">
+<input type="range" min="0" max="30" step="1" value="10"
+oninput="syncRange('sipStep',this.value)">
+
+<button onclick="calculateSIP()" class="mt-3 w-full bg-[#00d09c] text-white p-2 rounded">
+Calculate
+</button>
+
+<div class="mt-3 space-y-1">
+<p>Invested: <b id="sipInvested">₹0</b></p>
+<p>Returns: <b id="sipReturns">₹0</b></p>
+<p>Total: <b id="sipTotal">₹0</b></p>
+</div>
+</section>
+
+<!-- TAB 3: STOCK -->
+<section id="tab-stock" class="tab p-4">
+<h2 class="text-xl font-bold mb-3">Stock Calculator</h2>
+
+<label>Buy Price</label>
+<input type="number" id="buyPrice" value="1000" class="w-full p-2 rounded">
+<input type="range" min="1" max="10000" value="1000"
+oninput="syncRange('buyPrice',this.value)">
+
+<label>Quantity</label>
+<input type="number" id="quantity" value="10" class="w-full p-2 rounded">
+<input type="range" min="1" max="1000" value="10"
+oninput="syncRange('quantity',this.value)">
+
+<label>Current Price</label>
+<input type="number" id="currentPrice" value="1200" class="w-full p-2 rounded">
+<input type="range" min="1" max="10000" value="1200"
+oninput="syncRange('currentPrice',this.value)">
+
+<button onclick="calculateStock()" class="mt-3 w-full bg-[#00d09c] text-white p-2 rounded">
+Calculate
+</button>
+
+<div class="mt-3 space-y-1">
+<p>Invested: <b id="stkInvested">₹0</b></p>
+<p>Value: <b id="stkValue">₹0</b></p>
+<p>P/L: <b id="stkPL">₹0</b></p>
+</div>
+</section>
+
+<!-- TAB 4: SETTINGS -->
+<section id="tab-settings" class="tab p-4">
+<h2 class="text-xl font-bold mb-3">Settings</h2>
+
+<label class="flex items-center gap-3">
+<input type="checkbox" id="darkToggle" onchange="toggleDark()">
+<span>Enable Dark Mode</span>
+</label>
+</section>
+
+</main>
+
+<!-- BOTTOM NAV -->
+<nav class="fixed bottom-0 w-full bg-white dark:bg-gray-800 border-t flex">
+<button class="nav-btn p-2" onclick="openTab('simple')">🧮<br>Calc</button>
+<button class="nav-btn p-2" onclick="openTab('sip')">📈<br>SIP</button>
+<button class="nav-btn p-2" onclick="openTab('stock')">📊<br>Stock</button>
+<button class="nav-btn p-2" onclick="openTab('settings')">⚙️<br>Settings</button>
+</nav>
+
+<script>
+/* TAB NAV */
+function openTab(name){
+document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'))
+document.getElementById('tab-'+name).classList.add('active')
+}
+
+/* SLIDER SYNC */
+function syncRange(id,val){ document.getElementById(id).value = val }
+
+/* SIMPLE CALC */
+let exp=""
+function press(v){ exp+=v; calcDisplay.value=exp }
+function clearCalc(){ exp=""; calcDisplay.value="" }
+function calculate(){
+try{ exp=eval(exp).toString(); calcDisplay.value=exp }
+catch{ calcDisplay.value="Error"; exp="" }
+}
+
+/* SIP */
+function calculateSIP(){
+let P=+sipAmount.value
+let r=+sipRate.value/100/12
+let y=+sipYears.value
+let s=+sipStep.value/100
+let invested=0,total=0
+for(let yr=1;yr<=y;yr++){
+for(let m=1;m<=12;m++){
+invested+=P
+total=(total+P)*(1+r)
+}
+P+=P*s
+}
+sipInvested.innerText="₹"+Math.round(invested).toLocaleString()
+sipTotal.innerText="₹"+Math.round(total).toLocaleString()
+sipReturns.innerText="₹"+Math.round(total-invested).toLocaleString()
+}
+
+/* STOCK */
+function calculateStock(){
+let invested=buyPrice.value*quantity.value
+let value=currentPrice.value*quantity.value
+stkInvested.innerText="₹"+invested
+stkValue.innerText="₹"+value
+stkPL.innerText="₹"+(value-invested)
+}
+
+/* DARK MODE */
+function toggleDark(){
+document.documentElement.classList.toggle('dark')
+localStorage.theme=document.documentElement.classList.contains('dark')?'dark':'light'
+}
+if(localStorage.theme==='dark'){
+document.documentElement.classList.add('dark')
+darkToggle.checked=true
+}
+</script>
+
+</body>
+</html>
